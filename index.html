@@ -166,14 +166,14 @@
 </nav>
 
 <script>
-    // Mock functionality for location
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
             console.log("Location Lat: " + position.coords.latitude);
-            // In a real app, we would send these to Django and fetch real data
+    
         });
     }
 </script>
 
 </body>
+
 </html>
