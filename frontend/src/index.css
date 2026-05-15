@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root { font-family: 'Inter', system-ui, sans-serif; }
+  body { @apply bg-gray-50 text-gray-900; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium
+           hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-50;
+  }
+  .btn-outline {
+    @apply border border-emerald-600 text-emerald-700 px-4 py-2 rounded-lg font-medium
+           hover:bg-emerald-50 active:scale-95 transition-all;
+  }
+  .input {
+    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
+           focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent;
+  }
+  .card {
+    @apply bg-white rounded-xl border border-gray-200 shadow-sm;
+  }
+  .badge-expiring {
+    @apply bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .badge-active {
+    @apply bg-emerald-100 text-emerald-700 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+  .badge-expired {
+    @apply bg-red-100 text-red-700 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+}
