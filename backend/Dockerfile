@@ -4,8 +4,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN chmod +x mvnw
+RUN apt-get update && apt-get install -y maven
 
-RUN ./mvnw clean package
+RUN mvn clean package
 
 CMD ["java", "-jar", "target/*.jar"]
