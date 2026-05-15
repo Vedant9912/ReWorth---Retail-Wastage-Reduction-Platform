@@ -1,0 +1,192 @@
+/* style.css */
+
+:root {
+    --primary-green: #27ae60;
+    --dark-green: #1e8449;
+    --danger-red: #e74c3c;
+    --light-bg: #f4f7f6;
+    --white: #ffffff;
+    --text-dark: #2c3e50;
+    --text-muted: #95a5a6;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+body {
+    background-color: var(--light-bg);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-dark);
+    margin: 0;
+    padding-bottom: 80px; /* Space for bottom nav */
+}
+
+/* --- Header Section --- */
+.app-header {
+    background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+    color: var(--white);
+    padding: 20px 0;
+    border-bottom-left-radius: 25px;
+    border-bottom-right-radius: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.location-chip {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: inline-block;
+    margin-top: 8px;
+}
+
+/* --- Product Grid & Cards --- */
+.product-card {
+    border: none;
+    border-radius: 18px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background: var(--white);
+    position: relative;
+    height: 100%;
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Discount Label */
+.discount-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--danger-red);
+    color: var(--white);
+    padding: 5px 12px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    z-index: 5;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.product-img {
+    height: 160px;
+    object-fit: cover;
+    width: 100%;
+    transition: transform 0.5s ease;
+}
+
+.product-card:hover .product-img {
+    transform: scale(1.05);
+}
+
+/* Price & Details */
+.card-content {
+    padding: 15px;
+}
+
+.product-title {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.shop-name {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.price-new {
+    color: var(--primary-green);
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.price-old {
+    text-decoration: line-through;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-left: 5px;
+}
+
+/* Expiry Alert */
+.expiry-tag {
+    background: #fff3e0;
+    color: #e67e22;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+/* --- CTA Button --- */
+.claim-btn {
+    background-color: var(--primary-green);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 10px;
+    border-radius: 12px;
+    width: 100%;
+    transition: 0.2s;
+}
+
+.claim-btn:hover {
+    background-color: var(--dark-green);
+}
+
+/* --- Bottom Navigation (Mobile View) --- */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 70px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+}
+
+.nav-item {
+    text-align: center;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.75rem;
+    transition: 0.2s;
+}
+
+.nav-item.active {
+    color: var(--primary-green);
+}
+
+.nav-item i {
+    font-size: 1.4rem;
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* Add Item Button (Center) */
+.nav-add-btn {
+    background: var(--primary-green);
+    color: white !important;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -35px;
+    box-shadow: 0 4px 10px rgba(39, 174, 96, 0.4);
+    border: 4px solid var(--white);
+}
