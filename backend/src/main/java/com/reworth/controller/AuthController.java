@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "https://re-worth-retail-wastage-reduction-p.vercel.app")
 @Tag(name = "Auth")
 public class AuthController {
     private final AuthService authService;
