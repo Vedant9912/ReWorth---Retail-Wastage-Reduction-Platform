@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Platform Admin Portal — NearSave</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+    <style>
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .admin-table th, .admin-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 13px;
+        }
+        .admin-table th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .status-approved {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .action-btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .btn-approve {
+            background-color: #10b981;
+            color: #fff;
+        }
+        .btn-approve:hover {
+            background-color: #059669;
+        }
+        .btn-reject {
+            background-color: #ef4444;
+            color: #fff;
+        }
+        .btn-reject:hover {
+            background-color: #dc2626;
+        }
+        .audit-meta {
+            font-family: monospace;
+            font-size: 11px;
+            color: #4b5563;
+            max-width: 350px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-logo">
+        <span class="logo-dot" style="background:#ef4444"></span>NearSave Admin
+    </div>
+    <div class="nav-links">
+        <span class="nav-username" id="admin-name">Admin Portal</span>
+        <button class="btn-outline" onclick="logout()">Log out</button>
+    </div>
+</nav>
+
+<div class="dashboard-layout">
+    <!-- ── SIDEBAR NAVIGATION ──────────────────────────────────── -->
+    <aside class="dash-sidebar">
+        <div class="dash-nav-item active" id="nav-overview" onclick="showSection('overview')">
+            <i class="ti ti-layout-dashboard"></i> Overview
+        </div>
+        <div class="dash-nav-item" id="nav-shops" onclick="showSection('shops')">
+            <i class="ti ti-building-store"></i> Shop Approvals
+        </div>
+        <div class="dash-nav-item" id="nav-audit" onclick="showSection('audit')">
+            <i class="ti ti-history"></i> Audit Logs
+        </div>
+        <div class="dash-divider"></div>
+        <div class="dash-nav-item" onclick="logout()">
+            <i class="ti ti-logout"></i> Log out
+        </div>
+    </aside>
+
+    <!-- ── MAIN CONTENT ───────────────────────────────────────── -->
+    <main class="dash-main">
+        <!-- SECTION: OVERVIEW -->
+        <div id="section-overview">
+            <h2>Platform Overview</h2>
+            <p class="page-sub">Global platform-wide statistics and metrics.</p>
+
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <div class="m-label">Total Users</div>
+                    <div class="m-value" id="m-users">—</div>
+                </div>
+                <div class="metric-card">
+                    <div class="m-label">Total Shops</div>
+                    <div class="m-value" id="m-shops">—</div>
+                </div>
+                <div class="metric-card">
+                    <div class="m-label">Active Listings</div>
+                    <div class="m-value" id="m-products">—</div>
+                </div>
+                <div class="metric-card">
+                    <div class="m-label">Total Reservations</div>
+                    <div class="m-value" id="m-reservations">—</div>
+                </div>
+            </div>
+
+            <div class="metrics-row" style="margin-top:20px;">
+                <div class="metric-card">
+                    <div class="m-label">Transaction Volume (Completed Sales)</div>
+                    <div class="m-value" id="m-sales">₹0.00</div>
+                </div>
+                <div class="metric-card">
+                    <div class="m-label">Platform Cancellation Rate</div>
+                    <div class="m-value" id="m-cancel-rate">0.0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="m-label">Platform Expiry Rate</div>
+                    <div class="m-value" id="m-expiry-rate">0.0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: SHOPS APPROVAL -->
+        <div id="section-shops" class="hidden">
+            <h2>Shop Approvals</h2>
+            <p class="page-sub">Manage and approve hyperlocal retailer listing privileges.</p>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Shop ID</th>
+                        <th>Shop Name</th>
+                        <th>Address</th>
+                        <th>Retailer Owner</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="shop-list-body">
+                    <tr><td colspan="6" style="text-align:center;color:#9ca3af">Loading shops…</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION: AUDIT LOGS -->
+        <div id="section-audit" class="hidden">
+            <h2>System Audit Trails</h2>
+            <p class="page-sub">Historical transaction events, access controls, and logging logs.</p>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Actor</th>
+                        <th>Action</th>
+                        <th>Target Entity</th>
+                        <th>Event Metadata</th>
+                    </tr>
+                </thead>
+                <tbody id="audit-list-body">
+                    <tr><td colspan="5" style="text-align:center;color:#9ca3af">Loading audit trail…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="/js/auth.js"></script>
+<script>
+    // Ensure user has admin privileges
+    document.addEventListener("DOMContentLoaded", () => {
+        const user = getAuthUser();
+        if (!user || user.role !== 'ADMIN') {
+            window.location.href = "/pages/login.html";
+            return;
+        }
+        document.getElementById('admin-name').innerText = user.name;
+        loadPlatformStats();
+    });
+
+    function showSection(sectionId) {
+        document.getElementById('section-overview').classList.add('hidden');
+        document.getElementById('section-shops').classList.add('hidden');
+        document.getElementById('section-audit').classList.add('hidden');
+
+        document.getElementById('nav-overview').classList.remove('active');
+        document.getElementById('nav-shops').classList.remove('active');
+        document.getElementById('nav-audit').classList.remove('active');
+
+        document.getElementById('section-' + sectionId).classList.remove('hidden');
+        document.getElementById('nav-' + sectionId).classList.add('active');
+
+        if (sectionId === 'overview') loadPlatformStats();
+        if (sectionId === 'shops') loadShops();
+        if (sectionId === 'audit') loadAuditLogs();
+    }
+
+    async function loadPlatformStats() {
+        const data = await apiCall('/api/v1/analytics/admin');
+        if (data) {
+            document.getElementById('m-users').innerText = data.totalUsers;
+            document.getElementById('m-shops').innerText = data.totalShops;
+            document.getElementById('m-products').innerText = data.totalActiveProducts;
+            document.getElementById('m-reservations').innerText = data.totalReservations;
+            document.getElementById('m-sales').innerText = '₹' + data.totalSalesPlatform.toFixed(2);
+            document.getElementById('m-cancel-rate').innerText = data.cancellationRate.toFixed(1) + '%';
+            document.getElementById('m-expiry-rate').innerText = data.expiryRate.toFixed(1) + '%';
+        }
+    }
+
+    async function loadShops() {
+        const shops = await apiCall('/api/v1/admin/shops');
+        const tbody = document.getElementById('shop-list-body');
+        if (!shops || shops.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af">No shops found on the platform.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = shops.map(shop => {
+            const statusClass = shop.approved ? 'status-approved' : 'status-pending';
+            const statusText = shop.approved ? 'APPROVED' : 'PENDING APPROVAL';
+            
+            let actions = '';
+            if (!shop.approved) {
+                actions = `<button class="action-btn-sm btn-approve" onclick="toggleShopApproval(${shop.id}, true)">Approve</button>`;
+            } else {
+                actions = `<button class="action-btn-sm btn-reject" onclick="toggleShopApproval(${shop.id}, false)">Revoke</button>`;
+            }
+
+            return `
+                <tr>
+                    <td>${shop.id}</td>
+                    <td><strong>${escapeHtml(shop.shopName)}</strong></td>
+                    <td>${escapeHtml(shop.address || 'N/A')}</td>
+                    <td>${escapeHtml(shop.user.name)} (${escapeHtml(shop.user.email)})</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>${actions}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    async function toggleShopApproval(shopId, approve) {
+        const res = await apiCall(`/api/v1/shops/${shopId}/approve?approve=${approve}`, 'POST');
+        if (res) {
+            showToast(res.message || "Shop approval status updated.");
+            loadShops();
+        }
+    }
+
+    async function loadAuditLogs() {
+        const logs = await apiCall('/api/v1/admin/audit-logs');
+        const tbody = document.getElementById('audit-list-body');
+        if (!logs || logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#9ca3af">No audit logs recorded yet.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = logs.map(log => {
+            const formattedDate = new Date(log.timestamp).toLocaleString();
+            return `
+                <tr>
+                    <td style="color:#6b7280">${formattedDate}</td>
+                    <td><strong>${escapeHtml(log.actor)}</strong></td>
+                    <td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">${log.action}</code></td>
+                    <td>${escapeHtml(log.entityName)} (ID: ${log.entityId || 'N/A'})</td>
+                    <td><div class="audit-meta">${escapeHtml(log.metadata || 'N/A')}</div></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+</script>
+</body>
+</html>

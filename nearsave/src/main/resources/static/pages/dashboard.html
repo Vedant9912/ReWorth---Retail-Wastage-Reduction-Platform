@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard — NearSave Retailer</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/index.html" class="nav-logo"><span class="logo-dot"></span>NearSave</a>
+    <div class="nav-links">
+        <span class="nav-username" id="nav-name">Loading…</span>
+        <button class="btn-outline" onclick="logout()">Log out</button>
+    </div>
+</nav>
+
+<div class="dashboard-layout">
+
+    <!-- ── SIDEBAR NAVIGATION ──────────────────────────────────── -->
+    <aside class="dash-sidebar">
+        <div class="dash-nav-item active" onclick="showSection('overview')">
+            <i class="ti ti-layout-dashboard"></i> Dashboard
+        </div>
+        <div class="dash-nav-item" onclick="showSection('list-product')">
+            <i class="ti ti-plus"></i> List product
+        </div>
+        <div class="dash-nav-item" onclick="showSection('my-products')">
+            <i class="ti ti-package"></i> My products
+        </div>
+        <div class="dash-nav-item" onclick="showSection('tokens')">
+            <i class="ti ti-ticket"></i> Tokens
+        </div>
+        <div class="dash-divider"></div>
+        <div class="dash-nav-item" onclick="logout()">
+            <i class="ti ti-logout"></i> Log out
+        </div>
+    </aside>
+
+    <!-- ── MAIN CONTENT ───────────────────────────────────────── -->
+    <main class="dash-main">
+
+        <!-- ── SECTION: OVERVIEW ─────────────────────────────── -->
+        <div id="section-overview">
+            <h2 id="dash-shop-name">Your Shop</h2>
+            <p class="page-sub" id="dash-greeting">Welcome back!</p>
+
+            <!-- Metric cards — populated by loadDashboardData() -->
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <div class="m-label">Active listings</div>
+                    <div class="m-value" id="m-active">—</div>
+                    <div class="m-sub" id="m-active-sub"></div>
+                </div>
+                <div class="metric-card">
+                    <div class="m-label">Pending tokens</div>
+                    <div class="m-value" id="m-pending">—</div>
+                    <div class="m-sub" id="m-pending-sub"></div>
+                </div>
+                <div class="metric-card">
+                    <div class="m-label">Completed today</div>
+                    <div class="m-value" id="m-completed">—</div>
+                    <div class="m-sub" id="m-completed-sub"></div>
+                </div>
+                <div class="metric-card">
+                    <div class="m-label">Expired tokens</div>
+                    <div class="m-value" id="m-expired">—</div>
+                    <div class="m-sub" id="m-expired-sub">Stock auto-restored</div>
+                </div>
+            </div>
+
+            <!-- Two-column: quick add form + token verification -->
+            <div class="dash-grid">
+
+                <!-- Quick product listing form -->
+                <div class="dash-card">
+                    <h3>List a near-expiry product</h3>
+                    <div id="add-error" class="form-error hidden"></div>
+
+                    <div class="form-group">
+                        <label>Product name</label>
+                        <input type="text" id="p-name" placeholder="e.g. Fresh Paneer 500g" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="p-category">
+                                <option value="DAIRY">🥛 Dairy</option>
+                                <option value="BAKERY">🍞 Bakery</option>
+                                <option value="COSMETICS">💄 Cosmetics</option>
+                                <option value="SNACKS">🍿 Snacks</option>
+                                <option value="BEVERAGES">🧃 Beverages</option>
+                                <option value="MEDICINES">💊 Medicines</option>
+                                <option value="OTHER">📦 Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Qty in stock</label>
+                            <input type="number" id="p-stock" placeholder="10" min="1" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>MRP (₹)</label>
+                            <input type="number" id="p-mrp" placeholder="120" min="1"
+                                   oninput="calcDiscountedPrice()" />
+                        </div>
+                        <div class="form-group">
+                            <label>Discounted price (₹)</label>
+                            <!-- Auto-calculated as 55% of MRP, editable -->
+                            <input type="number" id="p-price" placeholder="66" min="1" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Expiry date (must be > 30 days away)</label>
+                        <input type="date" id="p-expiry" />
+                    </div>
+
+                    <button class="form-submit" id="add-btn" onclick="addProduct()">
+                        List product →
+                    </button>
+                </div>
+
+                <!-- Token verification -->
+                <div class="dash-card">
+                    <h3>Verify customer token</h3>
+                    <p style="font-size:13px;color:#6B7280;margin-bottom:14px">
+                        Enter the 6-character code the customer shows you to mark their order as collected.
+                    </p>
+                    <div class="verify-row">
+                        <input type="text" id="verify-input"
+                               placeholder="A4X9K2"
+                               maxlength="6"
+                               style="text-transform:uppercase"
+                               oninput="this.value=this.value.toUpperCase()"
+                               onkeydown="if(event.key==='Enter') verifyToken()" />
+                        <button onclick="verifyToken()">✓ Done</button>
+                    </div>
+                    <div id="verify-result" class="hidden" style="padding:10px 12px;border-radius:8px;font-size:13px;"></div>
+
+                    <h3 style="margin-top:20px">Recent tokens</h3>
+                    <div id="token-list" class="token-list">
+                        <div style="font-size:13px;color:#9CA3AF">Loading tokens…</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── SECTION: MY PRODUCTS ────────────────────────────── -->
+        <div id="section-my-products" class="hidden">
+            <h2>My Products</h2>
+            <p class="page-sub">All products you've listed on NearSave.</p>
+            <div id="my-products-grid" class="products-grid">
+                <div style="font-size:13px;color:#9CA3AF">Loading products…</div>
+            </div>
+        </div>
+
+        <!-- ── SECTION: ALL TOKENS ────────────────────────────── -->
+        <div id="section-tokens" class="hidden">
+            <h2>All Tokens</h2>
+            <p class="page-sub">Complete booking history for your shop.</p>
+            <div id="all-tokens-list" class="token-list"></div>
+        </div>
+
+    </main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="/js/auth.js"></script>
+<script>
+// ── GUARDS & INIT ─────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Redirect to login if not authenticated as RETAILER
+    const user = getUser();
+    if (!isLoggedIn() || !user || user.role !== 'RETAILER') {
+        window.location.href = '/pages/login.html';
+        return;
+    }
+
+    // Personalise the dashboard header
+    document.getElementById('nav-name').textContent = user.name;
+    document.getElementById('dash-shop-name').textContent = user.name + "'s Dashboard";
+    document.getElementById('dash-greeting').textContent =
+        'Manage your near-expiry listings and incoming token bookings.';
+
+    // Set default expiry date to 31 days from today
+    const defaultExpiry = new Date();
+    defaultExpiry.setDate(defaultExpiry.getDate() + 31);
+    document.getElementById('p-expiry').value = defaultExpiry.toISOString().split('T')[0];
+
+    // Load live data
+    loadDashboardData();
+});
+
+// ── SECTION NAVIGATION ────────────────────────────────────────────
+
+/**
+ * Shows the requested dashboard section, hides all others.
+ * Also loads fresh data for My Products and Tokens sections.
+ */
+function showSection(name) {
+    // Hide all sections
+    ['overview', 'list-product', 'my-products', 'tokens'].forEach(s => {
+        const el = document.getElementById(`section-${s}`);
+        if (el) el.classList.add('hidden');
+    });
+
+    // Update nav active state
+    document.querySelectorAll('.dash-nav-item').forEach(el => el.classList.remove('active'));
+    event?.target?.closest('.dash-nav-item')?.classList.add('active');
+
+    // Show the selected section
+    const target = document.getElementById(`section-${name}`);
+    if (target) target.classList.remove('hidden');
+
+    // Load section-specific data
+    if (name === 'my-products') loadMyProducts();
+    if (name === 'tokens')      loadAllTokens();
+}
+
+// ── DATA LOADING ──────────────────────────────────────────────────
+
+/**
+ * Loads the overview: metrics + recent token list.
+ * Called on page load.
+ */
+async function loadDashboardData() {
+    await Promise.all([loadMetrics(), loadTokenList()]);
+}
+
+/** Loads token metrics from the analytics API and updates metric cards */
+async function loadMetrics() {
+    const analyticsRes = await apiCall('/api/v1/analytics/retailer');
+    if (!analyticsRes.ok) return;
+
+    const stats = analyticsRes.data;
+
+    // Get live pending reservations count
+    const resList = await apiCall('/api/v1/reservations/shop');
+    const pendingCount = resList.ok ? resList.data.filter(r => r.status === 'RESERVED' || r.status === 'READY_FOR_PICKUP').length : 0;
+
+    document.getElementById('m-pending').textContent   = pendingCount;
+    document.getElementById('m-completed').textContent = stats.totalItemsSold;
+    document.getElementById('m-expired').textContent   = stats.totalExpiredItems;
+
+    // Load product count separately
+    const pResult = await apiCall('/api/v1/products/mine');
+    if (pResult.ok) {
+        const active = pResult.data.filter(p => p.stockQuantity > 0).length;
+        document.getElementById('m-active').textContent = active;
+        document.getElementById('m-active-sub').textContent =
+            pResult.data.length + ' total listed';
+    }
+}
+
+/** Loads and renders the recent token list in the dashboard */
+async function loadTokenList() {
+    const result = await apiCall('/api/v1/reservations/shop');
+    const container = document.getElementById('token-list');
+
+    if (!result.ok) {
+        container.innerHTML = `<div style="font-size:13px;color:#9CA3AF">${result.message}</div>`;
+        return;
+    }
+
+    const bookings = result.data.slice(0, 8); // Show last 8 in dashboard
+    renderTokenList(bookings, container);
+}
+
+/** Loads all tokens for the full Tokens section */
+async function loadAllTokens() {
+    const result = await apiCall('/api/v1/reservations/shop');
+    const container = document.getElementById('all-tokens-list');
+    if (!result.ok) return;
+    renderTokenList(result.data, container);
+}
+
+/** Renders a list of booking token rows into a container element */
+function renderTokenList(bookings, container) {
+    if (bookings.length === 0) {
+        container.innerHTML = `<div style="font-size:13px;color:#9CA3AF">No tokens yet.</div>`;
+        return;
+    }
+
+    const statusColor = { 
+        RESERVED: '#1D9E75', 
+        READY_FOR_PICKUP: '#2563EB', 
+        COMPLETED: '#0F6E56', 
+        CANCELLED: '#DC2626', 
+        EXPIRED: '#A32D2D', 
+        NO_SHOW: '#6B7280' 
+    };
+
+    container.innerHTML = bookings.map(b => {
+        let actions = '';
+        if (b.status === 'RESERVED') {
+            actions = `
+                <button class="action-btn-sm btn-approve" onclick="updateReservationStatus(${b.reservationId}, 'ready')">Ready</button>
+                <button class="action-btn-sm btn-reject" onclick="updateReservationStatus(${b.reservationId}, 'cancel')">Cancel</button>
+            `;
+        } else if (b.status === 'READY_FOR_PICKUP') {
+            actions = `
+                <button class="action-btn-sm btn-approve" onclick="openVerifyModal('${b.tokenCode}')">Verify</button>
+                <button class="action-btn-sm btn-reject" onclick="updateReservationStatus(${b.reservationId}, 'no-show')">No-Show</button>
+            `;
+        }
+
+        return `
+            <div class="token-row" style="display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid #f3f4f6;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <i class="ti ti-ticket" style="font-size:20px;color:${statusColor[b.status] || '#6B7280'}"></i>
+                    <div>
+                        <div class="token-code" style="font-weight:600;font-size:14px;">${b.tokenCode}</div>
+                        <div class="token-info" style="font-size:12px;color:#4B5563;">${b.productName}</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span class="pill pill-${b.status.toLowerCase()}" style="font-size:11px;padding:2px 8px;border-radius:9999px;">${b.status}</span>
+                    <div class="token-actions">${actions}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function updateReservationStatus(id, action) {
+    const res = await apiCall(`/api/v1/reservations/${id}/${action}`, { method: 'POST' });
+    if (res.ok) {
+        showToast(res.message || "Reservation status updated.", 'success');
+        loadDashboardData();
+    } else {
+        showToast(res.message, 'error');
+    }
+}
+
+function openVerifyModal(code) {
+    document.getElementById('verify-input').value = code;
+    verifyToken();
+}
+
+/** Loads the retailer's own product listings */
+async function loadMyProducts() {
+    const result = await apiCall('/api/v1/products/mine');
+    const grid = document.getElementById('my-products-grid');
+    if (!result.ok) { grid.innerHTML = `<div>${result.message}</div>`; return; }
+
+    const EMOJI = { DAIRY:'🥛', BAKERY:'🍞', COSMETICS:'💄', SNACKS:'🍿', BEVERAGES:'🧃', MEDICINES:'💊', OTHER:'📦' };
+
+    grid.innerHTML = result.data.map(p => `
+        <div class="product-card">
+            <div class="card-icon">${EMOJI[p.category] || '📦'}</div>
+            <div class="card-name">${p.name}</div>
+            <div class="card-shop">Stock: ${p.stockQuantity} · Exp: ${p.expiryDate}</div>
+            <div class="card-prices">
+                <span class="price-old">₹${p.mrp}</span>
+                <span class="price-new">₹${p.discountedPrice}</span>
+                <span class="discount-badge">${p.discountPercent}% off</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── PRODUCT LISTING ───────────────────────────────────────────────
+
+/**
+ * Auto-calculates the discounted price as 55% of MRP
+ * when the retailer enters the MRP field.
+ * Retailer can override this manually.
+ */
+function calcDiscountedPrice() {
+    const mrp = parseFloat(document.getElementById('p-mrp').value);
+    if (!isNaN(mrp) && mrp > 0) {
+        document.getElementById('p-price').value = (mrp * 0.55).toFixed(0);
+    }
+}
+
+/** Submits the new product form to POST /api/v1/products */
+async function addProduct() {
+    const name     = document.getElementById('p-name').value.trim();
+    const category = document.getElementById('p-category').value;
+    const stock    = parseInt(document.getElementById('p-stock').value);
+    const mrp      = parseFloat(document.getElementById('p-mrp').value);
+    const price    = parseFloat(document.getElementById('p-price').value);
+    const expiry   = document.getElementById('p-expiry').value;
+
+    if (!name || !expiry || isNaN(mrp) || isNaN(price) || isNaN(stock)) {
+        document.getElementById('add-error').textContent = 'Please fill in all fields.';
+        document.getElementById('add-error').classList.remove('hidden');
+        return;
+    }
+
+    document.getElementById('add-error').classList.add('hidden');
+    const btn = document.getElementById('add-btn');
+    btn.disabled = true; btn.textContent = 'Listing…';
+
+    const result = await apiCall('/api/v1/products', {
+        method: 'POST',
+        body: JSON.stringify({
+            name,
+            category,
+            stockQuantity: stock,
+            mrp,
+            discountedPrice: price,
+            expiryDate: expiry
+        })
+    });
+
+    btn.disabled = false; btn.textContent = 'List product →';
+
+    if (!result.ok) {
+        document.getElementById('add-error').textContent = result.message;
+        document.getElementById('add-error').classList.remove('hidden');
+        return;
+    }
+
+    showToast(`${name} listed successfully!`, 'success');
+    // Reset form
+    ['p-name','p-stock','p-mrp','p-price'].forEach(id => document.getElementById(id).value = '');
+    // Refresh metrics
+    loadMetrics();
+}
+
+// ── TOKEN VERIFICATION ────────────────────────────────────────────
+
+/** Submits the 6-char token code to POST /api/v1/bookings/verify */
+async function verifyToken() {
+    const code = document.getElementById('verify-input').value.trim().toUpperCase();
+    const resultEl = document.getElementById('verify-result');
+
+    if (code.length !== 6) {
+        resultEl.textContent = 'Please enter a 6-character token code.';
+        resultEl.style.background = '#FCEBEB'; resultEl.style.color = '#A32D2D';
+        resultEl.classList.remove('hidden');
+        return;
+    }
+
+    const result = await apiCall('/api/v1/reservations/verify', {
+        method: 'POST',
+        body: JSON.stringify({ tokenCode: code })
+    });
+
+    resultEl.classList.remove('hidden');
+    if (result.ok) {
+        resultEl.textContent = '✓ ' + result.data.message;
+        resultEl.style.background = '#E1F5EE'; resultEl.style.color = '#0F6E56';
+        document.getElementById('verify-input').value = '';
+        loadDashboardData(); // Refresh counts
+    } else {
+        resultEl.textContent = '✗ ' + result.message;
+        resultEl.style.background = '#FCEBEB'; resultEl.style.color = '#A32D2D';
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Tokens — NearSave</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/index.html" class="nav-logo"><span class="logo-dot"></span>NearSave</a>
+    <div class="nav-links">
+        <a href="/index.html">Browse</a>
+        <span class="nav-username" id="nav-name"></span>
+        <button class="btn-outline" onclick="logout()">Log out</button>
+    </div>
+</nav>
+
+<div class="tokens-page">
+    <h1>My Tokens</h1>
+    <p class="sub">Your active and past bookings.</p>
+
+    <div id="tokens-loading" style="color:#9CA3AF;font-size:14px">Loading your tokens…</div>
+    <div id="tokens-list"></div>
+    <div id="tokens-empty" class="empty-state hidden">
+        <i class="ti ti-ticket"></i>
+        <p>No tokens yet.</p>
+        <small><a href="/index.html" style="color:#1D9E75">Browse products</a> and book your first slot!</small>
+    </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="/js/auth.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Guard: must be logged in as CUSTOMER
+        const user = getUser();
+        if (!isLoggedIn() || !user || user.role !== 'CUSTOMER') {
+            window.location.href = '/pages/login.html';
+            return;
+        }
+        document.getElementById('nav-name').textContent = user.name;
+        loadMyTokens();
+    });
+
+    /** Fetches and renders the customer's full booking history */
+    async function loadMyTokens() {
+        const result = await apiCall('/api/v1/reservations/mine');
+        document.getElementById('tokens-loading').classList.add('hidden');
+
+        if (!result.ok) {
+            showToast(result.message, 'error');
+            return;
+        }
+
+        const bookings = result.data;
+        if (bookings.length === 0) {
+            document.getElementById('tokens-empty').classList.remove('hidden');
+            return;
+        }
+
+        const container = document.getElementById('tokens-list');
+        container.innerHTML = bookings.map(b => {
+            const expiresAt = new Date(b.expiresAt);
+            const now = new Date();
+            const isActive = (b.status === 'RESERVED' || b.status === 'READY_FOR_PICKUP') && expiresAt > now;
+
+            // For active tokens, calculate time remaining
+            let timeInfo = '';
+            if (isActive) {
+                const secsLeft = Math.floor((expiresAt - now) / 1000);
+                const m = Math.floor(secsLeft / 60);
+                const s = secsLeft % 60;
+                timeInfo = `<span style="color:#1D9E75;font-weight:500">
+                    ${m}:${String(s).padStart(2,'0')} remaining
+                </span>`;
+            } else {
+                timeInfo = `<span style="color:#9CA3AF">
+                    ${expiresAt.toLocaleString('en-IN', { dateStyle:'medium', timeStyle:'short' })}
+                </span>`;
+            }
+
+            let cancelBtn = '';
+            if (isActive) {
+                cancelBtn = `<button class="action-btn-sm btn-reject" style="margin-top: 12px; width: 100%; border: 1px solid #dc2626; border-radius: 6px; padding: 6px 12px; font-weight: 500; cursor: pointer; background: #dc2626; color: white;" onclick="cancelReservation(${b.reservationId})">Cancel Reservation</button>`;
+            }
+
+            return `
+                <div class="token-card" style="border:1px solid #e5e7eb; padding:16px; border-radius:12px; margin-bottom:16px; background:#white;">
+                    <div class="token-card-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                        <div class="big-code" style="font-size:20px; font-weight:700;">${b.tokenCode}</div>
+                        <span class="pill pill-${b.status.toLowerCase()}" style="font-size:11px; padding:2px 8px; border-radius:9999px;">${b.status}</span>
+                    </div>
+                    <div class="modal-info-table">
+                        <div class="modal-info-row">
+                            <span class="k">Product</span>
+                            <span class="v">${b.productName}</span>
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="k">Shop</span>
+                            <span class="v">${b.shopName}</span>
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="k">Pay at shop</span>
+                            <span class="v" style="color:#1D9E75">₹${b.amountToPay}</span>
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="k">${isActive ? 'Time left' : 'Status Time'}</span>
+                            <span class="v">${timeInfo}</span>
+                        </div>
+                    </div>
+                    ${cancelBtn}
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function cancelReservation(id) {
+        if (!confirm("Are you sure you want to cancel this reservation?")) return;
+        const res = await apiCall(`/api/v1/reservations/${id}/cancel`, { method: 'POST' });
+        if (res.ok) {
+            showToast(res.message || "Reservation cancelled.", 'success');
+            loadMyTokens();
+        } else {
+            showToast(res.message, 'error');
+        }
+    }
+</script>
+</body>
+</html>

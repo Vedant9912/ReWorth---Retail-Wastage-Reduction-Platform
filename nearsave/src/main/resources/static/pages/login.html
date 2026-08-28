@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Log in — NearSave</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/index.html" class="nav-logo"><span class="logo-dot"></span>NearSave</a>
+    <div class="nav-links">
+        <a href="/index.html">Browse</a>
+        <a href="/pages/register.html" class="btn-outline">Create account</a>
+    </div>
+</nav>
+
+<!-- ── LOGIN CARD ─────────────────────────────────────────────── -->
+<div class="auth-page">
+    <div class="auth-card">
+        <h1>Welcome back</h1>
+        <p class="sub">Log in to book near-expiry products near you.</p>
+
+        <!-- Error message (hidden until a login attempt fails) -->
+        <div id="login-error" class="form-error hidden"></div>
+
+        <!-- Login form — fields match LoginRequest DTO -->
+        <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" id="email" placeholder="you@example.com"
+                   autocomplete="email" oninput="clearError()" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••"
+                   autocomplete="current-password"
+                   oninput="clearError()"
+                   onkeydown="if(event.key==='Enter') doLogin()" />
+        </div>
+
+        <button class="form-submit" id="login-btn" onclick="doLogin()">
+            Log in
+        </button>
+
+        <p class="form-footer">
+            Don't have an account? <a href="/pages/register.html">Register here</a>
+        </p>
+
+        <!-- Demo credentials hint for development -->
+        <p class="form-footer" style="margin-top:12px;font-size:12px;color:#9CA3AF">
+            Demo: retailer@demo.com / customer@demo.com · password: password123
+        </p>
+    </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="/js/auth.js"></script>
+<script>
+    /**
+     * doLogin — reads form, calls POST /api/v1/auth/login, stores JWT.
+     *
+     * On success: redirect to dashboard (retailer) or homepage (customer).
+     * On failure: show error message inline above the form.
+     */
+    async function doLogin() {
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        // ── Basic client-side validation ──────────────────────────
+        if (!email || !password) {
+            showError('Please enter your email and password.');
+            return;
+        }
+
+        // ── Disable button to prevent double-submit ───────────────
+        const btn = document.getElementById('login-btn');
+        btn.disabled = true;
+        btn.textContent = 'Logging in…';
+
+        // ── API Call: POST /api/v1/auth/login ─────────────────────
+        const result = await apiCall('/api/v1/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
+        });
+
+        btn.disabled = false;
+        btn.textContent = 'Log in';
+
+        if (!result.ok) {
+            showError(result.message);
+            return;
+        }
+
+        // ── Save auth state and redirect ──────────────────────────
+        const { token, role, name, userId } = result.data;
+        saveAuth(token, role, name, userId);
+
+        // Redirect based on role
+        if (role === 'RETAILER') {
+            window.location.href = '/pages/dashboard.html';
+        } else {
+            // Return to wherever the user was trying to go (e.g. booking flow)
+            const redirect = sessionStorage.getItem('ns_redirect_after_login') || '/index.html';
+            sessionStorage.removeItem('ns_redirect_after_login');
+            window.location.href = redirect;
+        }
+    }
+
+    function showError(message) {
+        const el = document.getElementById('login-error');
+        el.textContent = message;
+        el.classList.remove('hidden');
+    }
+
+    function clearError() {
+        document.getElementById('login-error').classList.add('hidden');
+    }
+</script>
+</body>
+</html>

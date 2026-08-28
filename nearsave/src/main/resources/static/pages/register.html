@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register — NearSave</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/index.html" class="nav-logo"><span class="logo-dot"></span>NearSave</a>
+    <div class="nav-links">
+        <a href="/index.html">Browse</a>
+        <a href="/pages/login.html" class="btn-outline">Log in</a>
+    </div>
+</nav>
+
+<div class="auth-page">
+    <div class="auth-card">
+        <h1>Create account</h1>
+        <p class="sub">Join NearSave to save money and reduce food waste.</p>
+
+        <div id="reg-error" class="form-error hidden"></div>
+
+        <!-- ── ROLE SELECTOR ──────────────────────────────────── -->
+        <!-- Role determines which fields appear and what the user can do -->
+        <div class="form-group">
+            <label>I am a…</label>
+            <div style="display:flex;gap:10px;margin-top:4px">
+                <label class="role-option" id="role-customer-label">
+                    <input type="radio" name="role" value="CUSTOMER" id="role-customer"
+                           checked onchange="onRoleChange()" />
+                    <span>🛒 Customer</span>
+                </label>
+                <label class="role-option" id="role-retailer-label">
+                    <input type="radio" name="role" value="RETAILER" id="role-retailer"
+                           onchange="onRoleChange()" />
+                    <span>🏪 Retailer / Shop owner</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- ── COMMON FIELDS ──────────────────────────────────── -->
+        <div class="form-group">
+            <label for="name">Full name</label>
+            <input type="text" id="name" placeholder="Rahul Sharma" autocomplete="name" />
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Phone number (optional)</label>
+            <input type="tel" id="phone" placeholder="9876543210" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Min. 6 characters" autocomplete="new-password" />
+        </div>
+
+        <!-- ── RETAILER-ONLY FIELDS (hidden for CUSTOMER role) ── -->
+        <!-- These fields appear only when "Retailer" radio is selected -->
+        <div class="shop-fields" id="shop-fields">
+            <hr style="margin:16px 0;border:none;border-top:0.5px solid #E5E7EB" />
+            <p style="font-size:13px;font-weight:500;color:#4B5563;margin-bottom:14px">
+                Shop details
+            </p>
+
+            <div class="form-group">
+                <label for="shop-name">Shop name</label>
+                <input type="text" id="shop-name" placeholder="Krishna Dairy" />
+            </div>
+
+            <div class="form-group">
+                <label for="shop-address">Shop address</label>
+                <input type="text" id="shop-address" placeholder="Plot 12, MP Nagar, Bhopal" />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="shop-lat">Shop latitude</label>
+                    <input type="number" id="shop-lat" placeholder="23.2332" step="any" />
+                </div>
+                <div class="form-group">
+                    <label for="shop-lng">Shop longitude</label>
+                    <input type="number" id="shop-lng" placeholder="77.4272" step="any" />
+                </div>
+            </div>
+
+            <!-- Button to auto-fill coordinates from browser GPS -->
+            <button type="button" class="btn-green-outline" style="width:100%;justify-content:center;margin-bottom:16px"
+                    onclick="detectShopLocation()">
+                <i class="ti ti-current-location"></i> Use my current location
+            </button>
+        </div>
+
+        <button class="form-submit" id="reg-btn" onclick="doRegister()">
+            Create account
+        </button>
+
+        <p class="form-footer">
+            Already have an account? <a href="/pages/login.html">Log in</a>
+        </p>
+    </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<style>
+/* Role selector radio buttons styled as toggle buttons */
+.role-option {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    border: 0.5px solid #E5E7EB; border-radius: 8px;
+    cursor: pointer; font-size: 13px; flex: 1; justify-content: center;
+    transition: all 0.15s;
+}
+.role-option:has(input:checked) {
+    border-color: #1D9E75; background: #E1F5EE; color: #0F6E56; font-weight: 500;
+}
+.role-option input { display: none; } /* Hide the actual radio button */
+</style>
+
+<script src="/js/auth.js"></script>
+<script>
+    /**
+     * Show/hide the shop fields section based on selected role.
+     * Called whenever the role radio button changes.
+     */
+    function onRoleChange() {
+        const isRetailer = document.getElementById('role-retailer').checked;
+        const shopFields = document.getElementById('shop-fields');
+        shopFields.classList.toggle('visible', isRetailer);
+    }
+
+    /**
+     * Uses browser geolocation to fill in the shop's lat/lng fields.
+     * Retailers typically register from their shop, so this is accurate.
+     */
+    function detectShopLocation() {
+        if (!navigator.geolocation) {
+            showError('Geolocation not supported by your browser.');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                document.getElementById('shop-lat').value = pos.coords.latitude.toFixed(6);
+                document.getElementById('shop-lng').value = pos.coords.longitude.toFixed(6);
+                showToast('Location detected!', 'success');
+            },
+            () => showError('Could not detect location. Please enter manually.')
+        );
+    }
+
+    /**
+     * Reads all form fields, validates, calls POST /api/v1/auth/register.
+     * Maps to RegisterRequest DTO on the backend.
+     */
+    async function doRegister() {
+        const role      = document.querySelector('input[name="role"]:checked').value;
+        const name      = document.getElementById('name').value.trim();
+        const email     = document.getElementById('email').value.trim();
+        const phone     = document.getElementById('phone').value.trim();
+        const password  = document.getElementById('password').value;
+
+        // ── Client-side validation ────────────────────────────────
+        if (!name || !email || !password) {
+            showError('Please fill in all required fields.');
+            return;
+        }
+        if (password.length < 6) {
+            showError('Password must be at least 6 characters.');
+            return;
+        }
+
+        // ── Build request body ────────────────────────────────────
+        const body = { name, email, password, phone, role };
+
+        if (role === 'RETAILER') {
+            const shopName    = document.getElementById('shop-name').value.trim();
+            const shopAddress = document.getElementById('shop-address').value.trim();
+            const shopLat     = parseFloat(document.getElementById('shop-lat').value);
+            const shopLng     = parseFloat(document.getElementById('shop-lng').value);
+
+            if (!shopName || isNaN(shopLat) || isNaN(shopLng)) {
+                showError('Please fill in shop name and GPS coordinates.');
+                return;
+            }
+
+            body.shopName      = shopName;
+            body.shopAddress   = shopAddress;
+            body.shopLatitude  = shopLat;
+            body.shopLongitude = shopLng;
+        }
+
+        // ── Disable button ────────────────────────────────────────
+        const btn = document.getElementById('reg-btn');
+        btn.disabled = true;
+        btn.textContent = 'Creating account…';
+
+        // ── API Call ──────────────────────────────────────────────
+        const result = await apiCall('/api/v1/auth/register', {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+
+        btn.disabled = false;
+        btn.textContent = 'Create account';
+
+        if (!result.ok) {
+            showError(result.message);
+            return;
+        }
+
+        // ── Save auth and redirect ─────────────────────────────────
+        const { token, role: savedRole, name: savedName, userId } = result.data;
+        saveAuth(token, savedRole, savedName, userId);
+
+        if (savedRole === 'RETAILER') {
+            window.location.href = '/pages/dashboard.html';
+        } else {
+            window.location.href = '/index.html';
+        }
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('reg-error');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+    }
+
+    // Pre-select role if URL has ?role=RETAILER (from homepage "Are you a retailer?" link)
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('role') === 'RETAILER') {
+            document.getElementById('role-retailer').checked = true;
+            onRoleChange();
+        }
+    });
+</script>
+</body>
+</html>

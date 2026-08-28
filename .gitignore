@@ -1,0 +1,25 @@
+# Maven build outputs
+target/
+nearsave/target/
+
+# IDE configurations
+.idea/
+nearsave/.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+nearsave/.vscode/
+
+# Logs
+*.log
+nearsave/*.log
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Temporary zip files
+*.zip
+nearsave-project/nearsave.zip
+nearsave.zip
