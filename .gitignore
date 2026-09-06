@@ -23,3 +23,8 @@ Thumbs.db
 *.zip
 nearsave-project/nearsave.zip
 nearsave.zip
+
+# Ignore local interview guides and scripts
+*.pdf
+generate_*.py
+
